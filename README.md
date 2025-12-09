@@ -1,36 +1,239 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## tabula‑rasa
 
-## Getting Started
+A **Next.js** starter template with TypeScript, ESLint, Prettier, Tailwind CSS, and full workspace configuration.
 
-First, run the development server:
+---
+
+### Requirements
+
+| Item        | Minimum                           |
+| ----------- | --------------------------------- |
+| **Node.js** | 20.9                              |
+| **OS**      | macOS, Windows (incl. WSL), Linux |
+
+> **Reference:** <https://nextjs.org/docs/app/getting-started/installation#system-requirements>
+
+---
+
+### Tech Stack
+
+- **Next.js** (app‑router)
+- **TypeScript**
+- **ESLint** – plugins: `["check-file"]`
+- **Prettier** – plugins: `["@trivago/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"]`
+- **Tailwind CSS**
+
+---
+
+### Setup Guide
+
+#### 1️⃣ Scaffold the base project
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# create the app
+pnpm create next-app@latest next-base
+
+# move into the directory
+cd next-base
+
+# verify the dev server starts
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Commit the initial files once the server runs successfully.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Reference:** <https://nextjs.org/docs/app/getting-started/installation#quick-start>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 2️⃣ Workspace settings (VS Code)
 
-## Learn More
+Create `.vscode/settings.json` with the following content:
 
-To learn more about Next.js, take a look at the following resources:
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always",
+    "source.organizeImports": "always"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Commit the settings file.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### 3️⃣ Integrate Prettier & ESLint
 
-## Deploy on Vercel
+1. **Add ESLint‑Prettier bridge**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm add -D eslint-config-prettier
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Extend the ESLint config** (`eslint.config.mjs`)
+
+```js
+import nextVitals from "eslint-config-next/core-web-vitals";
+import prettier from "eslint-config-prettier/flat";
+import { defineConfig, globalIgnores } from "eslint/config";
+
+export default defineConfig([
+  ...nextVitals,
+  prettier,
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+]);
+```
+
+**Reference:** <https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules>  
+**Reference:** <https://nextjs.org/docs/app/api-reference/config/eslint#with-prettier>
+
+3. **Add sorting & Tailwind plugins**
+
+```bash
+pnpm add -D @trivago/prettier-plugin-sort-imports
+pnpm add -D prettier prettier-plugin-tailwindcss
+```
+
+4. **Create `.prettierrc.json`**
+
+```json
+{
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "importOrder": [
+    "^(react|next?/?([a-zA-Z/]*))$",
+    "<THIRD_PARTY_MODULES>",
+    "^@/(.*)$",
+    "^[./]"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ]
+}
+```
+
+**Reference:** <https://github.com/trivago/prettier-plugin-sort-imports/>  
+**Reference:** <https://tailwindcss.com/blog/automatic-class-sorting-with-prettier>
+
+5. **Verify** – format a component with mixed Tailwind classes and run:
+
+```bash
+pnpm lint
+```
+
+#### 4️⃣ Add a format script
+
+Add to `package.json`:
+
+```json
+{
+  "scripts": {
+    "format": "prettier src/ --write"
+  }
+}
+```
+
+Run `pnpm run format` to confirm all files are formatted.
+
+#### 5️⃣ Install `eslint-plugin-check-file`
+
+```bash
+pnpm add -D eslint-plugin-check-file
+```
+
+Add the plugin to `eslint.config.mjs` (example snippet):
+
+```js
+import checkFile from "eslint-plugin-check-file";
+
+export default defineConfig([
+  // …previous config
+  {
+    plugins: { checkFile },
+    rules: {
+      // enable desired rules from the plugin
+      "check-file/filename-match-export": "error",
+    },
+  },
+]);
+```
+
+Run `pnpm lint` to ensure the rule is active.
+
+**Reference:** <https://www.npmjs.com/package/eslint-plugin-check-file?activeTab=readme>  
+**Reference:** <https://github.com/alan2207/bulletproof-react/blob/master/docs/project-standards.md>
+
+#### 6️⃣ Enable typed routes
+
+Edit `next.config.js` (or `next.config.mjs`) and add:
+
+```js
+module.exports = {
+  // …other config
+  typedRoutes: true,
+};
+```
+
+Restart the dev server and verify TypeScript provides route typings.
+
+**Reference:** <https://nextjs.org/docs/app/api-reference/config/typescript>
+
+#### 7️⃣ Emoji favicon
+
+In `app/layout.tsx` add the following inside `<head>`:
+
+```tsx
+<link
+  rel="icon"
+  href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>"
+/>
+```
+
+Check that the emoji appears on the browser tab.
+
+**Reference:** <https://css-tricks.com/emoji-as-a-favicon/>
+
+#### 8️⃣ Export default viewport constant
+
+```tsx
+import { Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  // add other viewport settings as needed
+};
+```
+
+Use the exported `viewport` in your app without TypeScript errors.
+
+**References:**
+
+- <https://tailwindcss.com/docs/responsive-design>
+- <https://nextjs.org/docs/app/api-reference/functions/generate-viewport>
+
+---
+
+### Quick Commands Summary
+
+```bash
+# Scaffold
+pnpm create next-app@latest next-base
+cd next-base
+pnpm dev
+
+# Install dev dependencies
+pnpm add -D eslint-config-prettier @trivago/prettier-plugin-sort-imports prettier prettier-plugin-tailwindcss eslint-plugin-check-file
+
+# Lint & format
+pnpm lint
+pnpm run format
+```
+
+Happy coding!
